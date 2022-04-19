@@ -1,6 +1,3 @@
-using IWantApp.Domain.Products;
-using IWantApp.Infra.Data;
-using Flunt.Validations;
 using IWantApp.Endpoints.Categories;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
@@ -16,23 +13,21 @@ public class EmployeePost
     public static IResult Action(EmployeeRequest employeeRequest, UserManager<IdentityUser> userManager)
     {
         IdentityUser user = new IdentityUser {
-            UserName = employeeRequest.Email,
+            UserName = employeeRequest.Name,
             Email = employeeRequest.Email
         };
         var result = userManager.CreateAsync(user, employeeRequest.Password).Result;
 
         if (!result.Succeeded)
-            return Results.BadRequest(result.Errors.First());
+            return Results.ValidationProblem(result.Errors.ConvertToProblemDetails());
 
-        var claimResult = userManager.AddClaimAsync(
-            user, new Claim("EmployeeCode", employeeRequest.EmployeeCode)
-        ).Result;
+        List<Claim> userClaims = new List<Claim> {
+            new Claim("EmployeeCode", employeeRequest.EmployeeCode),
+            new Claim("Name", employeeRequest.Name)
+        };
 
-        if (!claimResult.Succeeded)
-            return Results.BadRequest(claimResult.Errors.First());
-
-        claimResult = userManager.AddClaimAsync(
-            user, new Claim("Name", employeeRequest.Name)
+        var claimResult = userManager.AddClaimsAsync(
+            user, userClaims
         ).Result;
 
         if (!claimResult.Succeeded)

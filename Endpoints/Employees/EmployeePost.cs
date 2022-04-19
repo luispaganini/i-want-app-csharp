@@ -10,8 +10,9 @@ public class EmployeePost
     public static string[] Methods => new string[] { HttpMethod.Post.ToString() };
     public static Delegate Handle => Action;
 
-    public static IResult Action(EmployeeRequest employeeRequest, UserManager<IdentityUser> userManager)
+    public static IResult Action(EmployeeRequest employeeRequest, HttpContext http, UserManager<IdentityUser> userManager)
     {
+        var userId = http.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value;
         IdentityUser user = new IdentityUser {
             UserName = employeeRequest.Name,
             Email = employeeRequest.Email
@@ -23,7 +24,8 @@ public class EmployeePost
 
         List<Claim> userClaims = new List<Claim> {
             new Claim("EmployeeCode", employeeRequest.EmployeeCode),
-            new Claim("Name", employeeRequest.Name)
+            new Claim("Name", employeeRequest.Name),
+            new Claim("CreatedBy", userId)
         };
 
         var claimResult = userManager.AddClaimsAsync(

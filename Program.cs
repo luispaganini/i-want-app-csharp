@@ -1,10 +1,25 @@
 using System.Text;
+using IWantApp.Endpoints.Products;
 using IWantApp.Endpoints.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
+using Serilog.Sinks.MSSqlServer;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseSerilog((context, configuration) => {
+    configuration
+        .WriteTo.Console()
+        .WriteTo.MSSqlServer(
+            context.Configuration["ConnectionStrings:Sqlserver"],
+            sinkOptions: new MSSqlServerSinkOptions() {
+                AutoCreateSqlTable = true,
+                TableName = "LogAPI"
+            }
+        );
+});
+
 builder.Services.AddSqlServer<ApplicationDbContext>(
     builder.Configuration["ConnectionStrings:Sqlserver"]);
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
@@ -71,7 +86,9 @@ app.MapMethods(CategoryGetAll.Template, CategoryGetAll.Methods, CategoryGetAll.H
 app.MapMethods(EmployeePost.Template, EmployeePost.Methods, EmployeePost.Handle);
 app.MapMethods(EmployeeGetAll.Template, EmployeeGetAll.Methods, EmployeeGetAll.Handle);
 app.MapMethods(TokenPost.Template, TokenPost.Methods, TokenPost.Handle);
-
+app.MapMethods(ProductPost.Template, ProductPost.Methods, ProductPost.Handle);
+app.MapMethods(ProductGetAll.Template, ProductGetAll.Methods, ProductGetAll.Handle);
+    
 app.UseExceptionHandler("/error");
 app.Map("/error", (HttpContext http) => {
     var error = http.Features?.Get<IExceptionHandlerFeature>()?.Error;
@@ -79,6 +96,8 @@ app.Map("/error", (HttpContext http) => {
     if (error != null)
         if (error is SqlException)
             return Results.Problem(title: "Database out", statusCode: 500);
+        else if (error is BadHttpRequestException)
+            return Results.Problem(title: "Error to convert data to other type. See All the information sent", statusCode: 500);
 
 
     return Results.Problem(title: "An error ocurred", statusCode: 500);

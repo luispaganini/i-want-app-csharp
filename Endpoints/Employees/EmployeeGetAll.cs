@@ -1,6 +1,3 @@
-using IWantApp.Infra.Data;
-using Microsoft.AspNetCore.Authorization;
-
 namespace IWantApp.Endpoints.Employees;
 
 public class EmployeeGetAll
@@ -10,7 +7,7 @@ public class EmployeeGetAll
     public static Delegate Handle => Action;
 
     [Authorize(Policy = "EmployeePolicy")]
-    public static IResult Action(int? page, int? rows, QueryAllUsersWithClaimName query)
+    public static async Task<IResult> Action(int? page, int? rows, QueryAllUsersWithClaimName query)
     {
         if (!(page == null || rows == null))
         {
@@ -22,6 +19,7 @@ public class EmployeeGetAll
             else
                 return Results.BadRequest();
         }
-        return Results.Ok(query.Execute(page.Value, rows.Value));
+        var result = await query.Execute(page.Value, rows.Value);
+        return Results.Ok(result);
     }
 }

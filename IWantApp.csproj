@@ -5,6 +5,24 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+  <ItemGroup>
+    <Using Include="Flunt.Notifications"/>
+    <Using Include="Flunt.Validations"/> 
+    <Using Include="Microsoft.Data.SqlClient"/>
+    <Using Include="Microsoft.AspNetCore.Identity"/>
+    <Using Include="Microsoft.AspNetCore.Authorization"/>
+    <Using Include="Microsoft.AspNetCore.Mvc"/> 
+    <Using Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore"/>
+    <Using Include="Microsoft.EntityFrameworkCore"/>
+    <Using Include="System.Security.Claims"/>
+    <Using Include="Dapper"/>
+
+    <Using Include="IWantApp.Domain.Products"/>
+    <Using Include="IWantApp.Endpoints.Categories"/>
+    <Using Include="IWantApp.Infra.Data"/>
+    <Using Include="IWantApp.Endpoints.Employees"/>
+    
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.123" />

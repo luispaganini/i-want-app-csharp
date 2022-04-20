@@ -1,7 +1,3 @@
-using IWantApp.Endpoints.Categories;
-using Microsoft.AspNetCore.Identity;
-using System.Security.Claims;
-
 namespace IWantApp.Endpoints.Employees;
 
 public class EmployeePost
@@ -10,14 +6,15 @@ public class EmployeePost
     public static string[] Methods => new string[] { HttpMethod.Post.ToString() };
     public static Delegate Handle => Action;
 
-    public static IResult Action(EmployeeRequest employeeRequest, HttpContext http, UserManager<IdentityUser> userManager)
+    [Authorize(Policy = "EmployeePolicy")]
+    public static async Task<IResult> Action(EmployeeRequest employeeRequest, HttpContext http, UserManager<IdentityUser> userManager)
     {
         var userId = http.User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value;
         IdentityUser user = new IdentityUser {
             UserName = employeeRequest.Name,
             Email = employeeRequest.Email
         };
-        var result = userManager.CreateAsync(user, employeeRequest.Password).Result;
+        var result = await userManager.CreateAsync(user, employeeRequest.Password);
 
         if (!result.Succeeded)
             return Results.ValidationProblem(result.Errors.ConvertToProblemDetails());
@@ -28,9 +25,7 @@ public class EmployeePost
             new Claim("CreatedBy", userId)
         };
 
-        var claimResult = userManager.AddClaimsAsync(
-            user, userClaims
-        ).Result;
+        var claimResult = await userManager.AddClaimsAsync(user, userClaims);
 
         if (!claimResult.Succeeded)
             return Results.BadRequest(claimResult.Errors.First());
